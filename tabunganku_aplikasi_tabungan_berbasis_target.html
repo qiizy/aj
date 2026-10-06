@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TabunganKu - Kelola Tabungan Berdasarkan Target</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 bg-slate-50 min-h-screen pb-24 md:pb-10 flex flex-col">
+
+    <!-- Header Navbar -->
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                    <i data-lucide="piggy-bank" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-700 bg-clip-text text-transparent">TabunganKu</h1>
+                    <p class="text-[10px] text-slate-400 font-medium tracking-wide uppercase">Wujudkan Impianmu</p>
+                </div>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+                <button onclick="switchTab('dashboard')" id="nav-desktop-dashboard" class="nav-desktop-btn px-4 py-2 text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4 inline mr-1.5"></i> Dashboard
+                </button>
+                <button onclick="switchTab('targets')" id="nav-desktop-targets" class="nav-desktop-btn px-4 py-2 text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">
+                    <i data-lucide="target" class="w-4 h-4 inline mr-1.5"></i> Target Saya
+                </button>
+                <button onclick="switchTab('add-deposit')" id="nav-desktop-add-deposit" class="nav-desktop-btn px-4 py-2 text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">
+                    <i data-lucide="plus-circle" class="w-4 h-4 inline mr-1.5"></i> Tambah Tabungan
+                </button>
+                <button onclick="switchTab('history')" id="nav-desktop-history" class="nav-desktop-btn px-4 py-2 text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900">
+                    <i data-lucide="history" class="w-4 h-4 inline mr-1.5"></i> Riwayat
+                </button>
+            </nav>
+
+            <!-- Quick Action Button -->
+            <div class="flex items-center space-x-2">
+                <button onclick="openNewTargetModal()" class="hidden sm:flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Target Baru</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex-1 w-full">
+
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="view-dashboard" class="space-y-6">
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-emerald-900/10 relative overflow-hidden">
+                <div class="absolute -right-8 -bottom-8 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold mb-3 tracking-wide">Ringkasan Keuangan</span>
+                        <h2 class="text-2xl sm:text-3xl font-bold">Selamat Datang di TabunganKu 👋</h2>
+                        <p class="text-emerald-100 mt-1 text-sm sm:text-base max-w-lg">Pantau perkembangan target finansialmu dan konsisten menabung setiap hari.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="switchTab('add-deposit')" class="bg-white text-emerald-800 hover:bg-emerald-50 px-5 py-2.5 rounded-2xl font-bold text-sm shadow-lg transition flex items-center gap-2">
+                            <i data-lucide="wallet" class="w-4 h-4"></i> Menabung Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metric Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Card 1: Total Saved -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="wallet" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Uang Ditabung</p>
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5" id="stat-total-saved">Rp 0</h3>
+                    </div>
+                </div>
+
+                <!-- Card 2: Active Targets -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="clock" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Target Berjalan</p>
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5" id="stat-active-targets">0</h3>
+                    </div>
+                </div>
+
+                <!-- Card 3: Completed Targets -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="trophy" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Target Tercapai</p>
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5" id="stat-completed-targets">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target List Section -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Daftar Target Tabungan</h3>
+                        <p class="text-xs text-slate-500">Kemajuan setiap target impian Anda</p>
+                    </div>
+                    <button onclick="openNewTargetModal()" class="text-emerald-600 hover:text-emerald-700 text-sm font-bold flex items-center gap-1">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Tambah Target
+                    </button>
+                </div>
+
+                <!-- Target Cards Grid -->
+                <div id="dashboard-target-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Dynamic cards will be rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: TARGETS MANAGEMENT -->
+        <section id="view-targets" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Target Tabungan</h2>
+                    <p class="text-slate-500 text-sm">Atur dan kelola semua target tabungan Anda di satu tempat.</p>
+                </div>
+                <button onclick="openNewTargetModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition flex items-center justify-center gap-2">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Buat Target Baru</span>
+                </button>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex space-x-2 border-b border-slate-200 pb-3">
+                <button onclick="filterTargets('all')" id="filter-all" class="target-filter-btn px-4 py-1.5 text-xs font-bold rounded-full bg-slate-900 text-white transition">
+                    Semua
+                </button>
+                <button onclick="filterTargets('active')" id="filter-active" class="target-filter-btn px-4 py-1.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                    Sedang Berjalan
+                </button>
+                <button onclick="filterTargets('completed')" id="filter-completed" class="target-filter-btn px-4 py-1.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                    Tercapai
+                </button>
+            </div>
+
+            <!-- Grid Container -->
+            <div id="all-targets-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Dynamic cards rendered here -->
+            </div>
+        </section>
+
+        <!-- VIEW 3: TAMBAH TABUNGAN FORM -->
+        <section id="view-add-deposit" class="max-w-2xl mx-auto space-y-6 hidden">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-md">
+                <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-100">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <i data-lucide="coins" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Setor Tabungan</h2>
+                        <p class="text-xs text-slate-500">Catat setiap uang yang Anda sisihkan ke target Anda.</p>
+                    </div>
+                </div>
+
+                <form id="deposit-form" onsubmit="handleDepositSubmit(event)" class="space-y-5">
+                    <!-- Target Dropdown -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Pilih Target Tabungan <span class="text-rose-500">*</span></label>
+                        <select id="deposit-target-id" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Nominal Input -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Nominal Setoran (Rp) <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+                            <input type="number" id="deposit-amount" min="1000" required placeholder="Contoh: 100000" class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+                        </div>
+                    </div>
+
+                    <!-- Date Picker -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Tanggal Setor <span class="text-rose-500">*</span></label>
+                        <input type="date" id="deposit-date" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+                    </div>
+
+                    <!-- Optional Note -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Catatan (Opsional)</label>
+                        <input type="text" id="deposit-note" placeholder="Contoh: Sisa uang saku mingguan" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 text-sm">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                        <span>Simpan Tabungan</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- VIEW 4: TRANSACTION HISTORY -->
+        <section id="view-history" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Riwayat Transaksi</h2>
+                    <p class="text-slate-500 text-sm">Semua catatan uang masuk yang telah Anda tabung.</p>
+                </div>
+            </div>
+
+            <!-- History Table Card -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 items-center justify-between">
+                    <div class="relative w-full sm:w-64">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="history-search" oninput="renderHistoryTable()" placeholder="Cari transaksi..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                    </div>
+                    <span id="history-count-badge" class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">0 Transaksi</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold uppercase text-slate-400 tracking-wider">
+                                <th class="py-3 px-4">Tanggal</th>
+                                <th class="py-3 px-4">Target</th>
+                                <th class="py-3 px-4">Nominal</th>
+                                <th class="py-3 px-4">Catatan</th>
+                                <th class="py-3 px-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="history-empty-state" class="p-10 text-center space-y-2">
+                    <i data-lucide="receipt" class="w-10 h-10 mx-auto text-slate-300"></i>
+                    <p class="text-slate-500 font-semibold text-sm">Belum ada riwayat transaksi.</p>
+                    <p class="text-xs text-slate-400">Mulaikah menabung untuk mencatat riwayat pertama Anda.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: BUAT / EDIT TARGET -->
+    <div id="target-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden transform transition-all">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="font-bold text-slate-900" id="target-modal-title">Buat Target Tabungan Baru</h3>
+                <button onclick="closeTargetModal()" class="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <form id="target-form" onsubmit="handleTargetSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="target-form-id">
+
+                <!-- Target Name -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Target <span class="text-rose-500">*</span></label>
+                    <input type="text" id="target-name" required placeholder="Contoh: Beli Laptop Baru" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                </div>
+
+                <!-- Target Amount -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nominal Target (Rp) <span class="text-rose-500">*</span></label>
+                    <input type="number" id="target-amount" min="1000" required placeholder="Contoh: 5000000" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                </div>
+
+                <!-- Icon Selection -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Pilih Ikon Category</label>
+                    <div class="grid grid-cols-6 gap-2" id="icon-picker-container">
+                        <!-- Dynamically filled with icons -->
+                    </div>
+                    <input type="hidden" id="target-icon" value="smartphone">
+                </div>
+
+                <!-- Target Date -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tenggat Tanggal (Opsional)</label>
+                    <input type="date" id="target-date" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                </div>
+
+                <!-- Notes -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Catatan Tambahan (Opsional)</label>
+                    <textarea id="target-notes" rows="2" placeholder="Tuliskan catatan atau motivasi..." class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"></textarea>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="closeTargetModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition">
+                        Simpan Target
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: DETAIL TARGET -->
+    <div id="detail-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex items-center justify-between shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div id="detail-icon-box" class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-400">
+                        <i data-lucide="target" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold" id="detail-title">Detail Target</h3>
+                        <p class="text-xs text-slate-300" id="detail-status-badge">Sedang Berjalan</p>
+                    </div>
+                </div>
+                <button onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6">
+                <!-- Progress Big Visual -->
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-3">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Uang Terkumpul</span>
+                            <h4 class="text-2xl font-black text-emerald-600" id="detail-collected">Rp 0</h4>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Target Nominal</span>
+                            <h5 class="text-base font-bold text-slate-800" id="detail-target-nominal">Rp 0</h5>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                        <div id="detail-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+
+                    <div class="flex justify-between text-xs font-bold text-slate-500 pt-1">
+                        <span id="detail-percentage">0% Tercapai</span>
+                        <span id="detail-remaining" class="text-rose-500">Sisa: Rp 0</span>
+                    </div>
+                </div>
+
+                <!-- Analytics / Habit Insight -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-start space-x-3">
+                        <i data-lucide="line-chart" class="w-5 h-5 text-emerald-600 mt-0.5 shrink-0"></i>
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold">Rata-Rata Menabung</p>
+                            <p class="text-sm font-bold text-slate-900 mt-0.5" id="detail-avg-deposit">Rp 0 / setoran</p>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-teal-50/50 rounded-2xl border border-teal-100 flex items-start space-x-3">
+                        <i data-lucide="calendar-clock" class="w-5 h-5 text-teal-600 mt-0.5 shrink-0"></i>
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold">Perkiraan Target Selesai</p>
+                            <p class="text-sm font-bold text-slate-900 mt-0.5" id="detail-estimate">Belum dapat diprediksi</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes Section if any -->
+                <div id="detail-notes-container" class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 hidden">
+                    <p class="font-bold text-slate-800 mb-1">Catatan / Catatan Impian:</p>
+                    <p id="detail-notes-text"></p>
+                </div>
+
+                <!-- Deposit History for this specific target -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-bold text-slate-900 text-sm">Riwayat Setoran Target Ini</h4>
+                        <button id="detail-quick-add-btn" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Setor Uang
+                        </button>
+                    </div>
+
+                    <div class="border border-slate-200/80 rounded-2xl overflow-hidden">
+                        <ul id="detail-history-list" class="divide-y divide-slate-100 text-xs">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center shrink-0">
+                <button id="detail-delete-target-btn" class="text-rose-600 hover:text-rose-700 text-xs font-bold flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-rose-50 transition">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Target
+                </button>
+                <div class="flex gap-2">
+                    <button id="detail-edit-target-btn" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl transition">
+                        Edit Target
+                    </button>
+                    <button onclick="closeDetailModal()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRMATION MODAL -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white max-w-sm w-full rounded-2xl p-6 shadow-2xl text-center space-y-4">
+            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-900" id="confirm-modal-title">Konfirmasi Hapus</h3>
+                <p class="text-xs text-slate-500 mt-1" id="confirm-modal-message">Apakah Anda yakin ingin menghapus data ini?</p>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeConfirmModal(false)" class="w-1/2 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 transition">Batal</button>
+                <button onclick="closeConfirmModal(true)" class="w-1/2 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl hover:bg-rose-700 transition">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CELEBRATION MODAL -->
+    <div id="celebration-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white max-w-md w-full rounded-3xl p-8 shadow-2xl text-center space-y-5 relative overflow-hidden">
+            <div class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto shadow-inner animate-bounce">
+                <i data-lucide="trophy" class="w-10 h-10"></i>
+            </div>
+            <div>
+                <span class="text-xs font-black uppercase tracking-widest text-emerald-600">Selamat! Target Tercapai 🎉</span>
+                <h3 class="text-2xl font-black text-slate-900 mt-1" id="celebration-target-name">Beli HP Baru</h3>
+                <p class="text-xs text-slate-500 mt-2">Luar biasa! Uang tabungan Anda telah mencapai target <strong id="celebration-target-amount" class="text-slate-800">Rp 4.000.000</strong>.</p>
+            </div>
+            <button onclick="closeCelebrationModal()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition">
+                Mantap! Lanjutkan Target Lain
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-20 md:bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-3 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+        <div id="toast-icon" class="text-emerald-400">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </div>
+        <p id="toast-message" class="text-xs font-semibold">Pesan notifikasi</p>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 z-40 px-3 py-2 flex justify-around items-center">
+        <button onclick="switchTab('dashboard')" id="nav-mobile-dashboard" class="nav-mobile-btn flex flex-col items-center p-1 text-slate-400">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            <span class="text-[10px] font-bold mt-1">Dashboard</span>
+        </button>
+        <button onclick="switchTab('targets')" id="nav-mobile-targets" class="nav-mobile-btn flex flex-col items-center p-1 text-slate-400">
+            <i data-lucide="target" class="w-5 h-5"></i>
+            <span class="text-[10px] font-bold mt-1">Target</span>
+        </button>
+        <button onclick="switchTab('add-deposit')" id="nav-mobile-add-deposit" class="nav-mobile-btn flex flex-col items-center p-1 text-slate-400">
+            <div class="w-10 h-10 -mt-5 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-600/30">
+                <i data-lucide="plus" class="w-6 h-6"></i>
+            </div>
+            <span class="text-[10px] font-bold mt-0.5">Setor</span>
+        </button>
+        <button onclick="switchTab('history')" id="nav-mobile-history" class="nav-mobile-btn flex flex-col items-center p-1 text-slate-400">
+            <i data-lucide="history" class="w-5 h-5"></i>
+            <span class="text-[10px] font-bold mt-1">Riwayat</span>
+        </button>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+
+        // APP STATE & CONSTANTS
+        const STORAGE_KEY = 'tabunganku_app_data_v2';
+        
+        // Available Category Icons
+        const CATEGORY_ICONS = [
+            { id: 'smartphone', label: 'HP / Gadget', icon: 'smartphone' },
+            { id: 'car', label: 'Kendaraan', icon: 'car' },
+            { id: 'plane', label: 'Liburan', icon: 'plane' },
+            { id: 'home', label: 'Rumah', icon: 'home' },
+            { id: 'graduation-cap', label: 'Pendidikan', icon: 'graduation-cap' },
+            { id: 'shopping-bag', label: 'Belanja', icon: 'shopping-bag' },
+            { id: 'shield-alert', label: 'Darurat', icon: 'shield-alert' },
+            { id: 'laptop', label: 'Elektronik', icon: 'laptop' },
+            { id: 'utensils', label: 'Kuliner', icon: 'utensils' },
+            { id: 'heart', label: 'Kesehatan', icon: 'heart' },
+            { id: 'gift', label: 'Hadiah', icon: 'gift' },
+            { id: 'target', label: 'Umum', icon: 'target' }
+        ];
+
+        let state = {
+            targets: [],
+            transactions: []
+        };
+
+        let currentActiveTab = 'dashboard';
+        let currentFilter = 'all';
+        let confirmResolver = null;
+        let selectedIcon = 'smartphone';
+
+        // UTILITY FUNCTIONS
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                maximumFractionDigits: 0
+            }).format(number || 0);
+        }
+
+        function formatDateID(dateString) {
+            if (!dateString) return '-';
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        }
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.error("Gagal menyimpan ke LocalStorage", e);
+            }
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    state = JSON.parse(saved);
+                } else {
+                    // Pre-populate initial dummy data for pleasant first run if empty
+                    initializeDefaultData();
+                }
+            } catch (e) {
+                console.error("Gagal membaca LocalStorage", e);
+                initializeDefaultData();
+            }
+        }
+
+        function initializeDefaultData() {
+            state = {
+                targets: [
+                    {
+                        id: 'target-1',
+                        name: 'Beli HP Baru',
+                        amount: 4000000,
+                        date: '2026-12-31',
+                        icon: 'smartphone',
+                        notes: 'Tabungan khusus upgrade HP untuk produktivitas.',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'target-2',
+                        name: 'Liburan Bali',
+                        amount: 3000000,
+                        date: '2026-08-17',
+                        icon: 'plane',
+                        notes: 'Tiket & penginapan villa.',
+                        createdAt: new Date().toISOString()
+                    }
+                ],
+                transactions: [
+                    {
+                        id: 'tx-1',
+                        targetId: 'target-1',
+                        amount: 1500000,
+                        date: new Date().toISOString().split('T')[0],
+                        note: 'Gaji bulan ini'
+                    },
+                    {
+                        id: 'tx-2',
+                        targetId: 'target-2',
+                        amount: 3000000,
+                        date: new Date().toISOString().split('T')[0],
+                        note: 'Bonus proyek selesai'
+                    }
+                ]
+            };
+            saveStateToStorage();
+        }
+
+
+        // NAVIGATION SWITCHER
+        function switchTab(tabId) {
+            currentActiveTab = tabId;
+
+            // Hide all views
+            ['dashboard', 'targets', 'add-deposit', 'history'].forEach(view => {
+                const el = document.getElementById(`view-${view}`);
+                if (el) el.classList.add('hidden');
+            });
+
+            // Show current view
+            const activeView = document.getElementById(`view-${tabId}`);
+            if (activeView) activeView.classList.remove('hidden');
+
+            // Highlight desktop nav
+            document.querySelectorAll('.nav-desktop-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white');
+                btn.classList.add('text-slate-600');
+            });
+            const activeDesktopNav = document.getElementById(`nav-desktop-${tabId}`);
+            if (activeDesktopNav) {
+                activeDesktopNav.classList.add('bg-emerald-600', 'text-white');
+                activeDesktopNav.classList.remove('text-slate-600');
+            }
+
+            // Highlight mobile nav
+            document.querySelectorAll('.nav-mobile-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-600');
+                btn.classList.add('text-slate-400');
+            });
+            const activeMobileNav = document.getElementById(`nav-mobile-${tabId}`);
+            if (activeMobileNav) {
+                activeMobileNav.classList.add('text-emerald-600');
+                activeMobileNav.classList.remove('text-slate-400');
+            }
+
+            // Perform specific updates based on view
+            if (tabId === 'dashboard') {
+                renderDashboard();
+            } else if (tabId === 'targets') {
+                renderTargetsGrid();
+            } else if (tabId === 'add-deposit') {
+                populateDepositTargetDropdown();
+            } else if (tabId === 'history') {
+                renderHistoryTable();
+            }
+
+            lucide.createIcons();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // CALCULATE TARGET PROGRESS & STATS
+        function getTargetCollectedAmount(targetId) {
+            return state.transactions
+                .filter(tx => tx.targetId === targetId)
+                .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+        }
+
+        function calculateOverallStats() {
+            let totalSaved = 0;
+            let activeCount = 0;
+            let completedCount = 0;
+
+            state.targets.forEach(target => {
+                const collected = getTargetCollectedAmount(target.id);
+                totalSaved += collected;
+                if (collected >= target.amount) {
+                    completedCount++;
+                } else {
+                    activeCount++;
+                }
+            });
+
+            return { totalSaved, activeCount, completedCount };
+        }
+
+
+        // RENDER DASHBOARD VIEW
+        function renderDashboard() {
+            const stats = calculateOverallStats();
+
+            document.getElementById('stat-total-saved').textContent = formatRupiah(stats.totalSaved);
+            document.getElementById('stat-active-targets').textContent = stats.activeCount;
+            document.getElementById('stat-completed-targets').textContent = stats.completedCount;
+
+            const grid = document.getElementById('dashboard-target-grid');
+            grid.innerHTML = '';
+
+            if (state.targets.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white rounded-3xl p-8 text-center border border-slate-200/80">
+                        <i data-lucide="piggy-bank" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                        <h4 class="text-base font-bold text-slate-800">Belum Ada Target Tabungan</h4>
+                        <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">Buat target tabungan pertama Anda untuk mulai mengumpulkan uang secara disiplin.</p>
+                        <button onclick="openNewTargetModal()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Buat Target Sekarang
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            state.targets.forEach(target => {
+                const collected = getTargetCollectedAmount(target.id);
+                const percent = Math.min(100, Math.round((collected / target.amount) * 100));
+                const isCompleted = collected >= target.amount;
+                const remaining = Math.max(0, target.amount - collected);
+
+                const cardHtml = createTargetCardHTML(target, collected, percent, isCompleted, remaining);
+                grid.insertAdjacentHTML('beforeend', cardHtml);
+            });
+
+            lucide.createIcons();
+        }
+
+        // RENDER TARGETS PAGE GRID
+        function filterTargets(type) {
+            currentFilter = type;
+            document.querySelectorAll('.target-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-900', 'text-white');
+                btn.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            const activeFilterBtn = document.getElementById(`filter-${type}`);
+            if (activeFilterBtn) {
+                activeFilterBtn.classList.add('bg-slate-900', 'text-white');
+                activeFilterBtn.classList.remove('bg-slate-100', 'text-slate-600');
+            }
+            renderTargetsGrid();
+        }
+
+        function renderTargetsGrid() {
+            const grid = document.getElementById('all-targets-grid');
+            grid.innerHTML = '';
+
+            let filteredTargets = state.targets;
+
+            if (currentFilter === 'active') {
+                filteredTargets = state.targets.filter(t => getTargetCollectedAmount(t.id) < t.amount);
+            } else if (currentFilter === 'completed') {
+                filteredTargets = state.targets.filter(t => getTargetCollectedAmount(t.id) >= t.amount);
+            }
+
+            if (filteredTargets.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white rounded-3xl p-8 text-center border border-slate-200/80">
+                        <i data-lucide="search-x" class="w-10 h-10 text-slate-300 mx-auto mb-2"></i>
+                        <p class="text-sm font-bold text-slate-700">Tidak ada target dalam kategori ini.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredTargets.forEach(target => {
+                const collected = getTargetCollectedAmount(target.id);
+                const percent = Math.min(100, Math.round((collected / target.amount) * 100));
+                const isCompleted = collected >= target.amount;
+                const remaining = Math.max(0, target.amount - collected);
+
+                grid.insertAdjacentHTML('beforeend', createTargetCardHTML(target, collected, percent, isCompleted, remaining));
+            });
+
+            lucide.createIcons();
+        }
+
+        // CARD TEMPLATE GENERATOR
+        function createTargetCardHTML(target, collected, percent, isCompleted, remaining) {
+            const iconObj = CATEGORY_ICONS.find(i => i.id === target.icon) || CATEGORY_ICONS[0];
+
+            return `
+                <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group relative">
+                    <div>
+                        <!-- Header Card -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-2xl ${isCompleted ? 'bg-amber-100 text-amber-600' : 'bg-emerald-50 text-emerald-600'} flex items-center justify-center font-bold">
+                                    <i data-lucide="${iconObj.icon}" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-extrabold text-slate-900 group-hover:text-emerald-600 transition truncate max-w-[160px] sm:max-w-[180px]">${escapeHTML(target.name)}</h4>
+                                    <p class="text-[11px] font-semibold text-slate-400">Target: ${formatRupiah(target.amount)}</p>
+                                </div>
+                            </div>
+                            ${isCompleted 
+                                ? `<span class="bg-amber-100 text-amber-700 text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1">
+                                    <i data-lucide="check-circle" class="w-3 h-3"></i> Tercapai
+                                   </span>`
+                                : `<span class="bg-emerald-50 text-emerald-700 text-[10px] font-extrabold px-2 py-1 rounded-full">
+                                    ${percent}%
+                                   </span>`
+                            }
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="space-y-1.5 my-3">
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div class="h-full ${isCompleted ? 'bg-gradient-to-r from-amber-500 to-yellow-400' : 'bg-gradient-to-r from-emerald-500 to-teal-400'} rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                            </div>
+                            <div class="flex justify-between text-[11px] font-bold">
+                                <span class="text-slate-900">${formatRupiah(collected)}</span>
+                                <span class="${isCompleted ? 'text-amber-600' : 'text-slate-400'}">${isCompleted ? 'Selesai!' : 'Sisa ' + formatRupiah(remaining)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-2 mt-2">
+                        <button onclick="openDetailModal('${target.id}')" class="text-xs font-bold text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition flex items-center gap-1">
+                            <i data-lucide="eye" class="w-3.5 h-3.5"></i> Detail
+                        </button>
+                        <button onclick="quickDepositForTarget('${target.id}')" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Setor
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        // DEPOSIT FORM POPULATOR & HANDLER
+        function populateDepositTargetDropdown(selectedTargetId = null) {
+            const select = document.getElementById('deposit-target-id');
+            select.innerHTML = '';
+
+            if (state.targets.length === 0) {
+                select.innerHTML = '<option value="">-- Belum ada target --</option>';
+                return;
+            }
+
+            state.targets.forEach(target => {
+                const collected = getTargetCollectedAmount(target.id);
+                const isCompleted = collected >= target.amount;
+                const opt = document.createElement('option');
+                opt.value = target.id;
+                opt.textContent = `${target.name} (${formatRupiah(collected)} / ${formatRupiah(target.amount)})${isCompleted ? ' - [Tercapai]' : ''}`;
+                if (selectedTargetId && target.id === selectedTargetId) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+
+            // Set default date to today
+            document.getElementById('deposit-date').value = new Date().toISOString().split('T')[0];
+        }
+
+        function quickDepositForTarget(targetId) {
+            switchTab('add-deposit');
+            setTimeout(() => {
+                populateDepositTargetDropdown(targetId);
+            }, 50);
+        }
+
+        function handleDepositSubmit(e) {
+            e.preventDefault();
+
+            const targetId = document.getElementById('deposit-target-id').value;
+            const amount = Number(document.getElementById('deposit-amount').value);
+            const date = document.getElementById('deposit-date').value;
+            const note = document.getElementById('deposit-note').value;
+
+            if (!targetId) {
+                showToast("Pilih target terlebih dahulu!", "error");
+                return;
+            }
+
+            const targetObj = state.targets.find(t => t.id === targetId);
+            if (!targetObj) return;
+
+            const prevCollected = getTargetCollectedAmount(targetId);
+
+            const newTx = {
+                id: 'tx-' + Date.now(),
+                targetId: targetId,
+                amount: amount,
+                date: date,
+                note: note
+            };
+
+            state.transactions.unshift(newTx);
+            saveStateToStorage();
+
+            const newCollected = prevCollected + amount;
+
+            // Reset Form
+            document.getElementById('deposit-amount').value = '';
+            document.getElementById('deposit-note').value = '';
+
+            showToast(`Berhasil menyetor ${formatRupiah(amount)} ke "${targetObj.name}"`);
+
+            // Check if target was just completed
+            if (prevCollected < targetObj.amount && newCollected >= targetObj.amount) {
+                triggerCelebration(targetObj);
+            } else {
+                switchTab('dashboard');
+            }
+        }
+
+        // TRANSACTION HISTORY TABLE
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-table-body');
+            const emptyState = document.getElementById('history-empty-state');
+            const searchVal = (document.getElementById('history-search').value || '').toLowerCase();
+
+            tbody.innerHTML = '';
+
+            const filtered = state.transactions.filter(tx => {
+                const target = state.targets.find(t => t.id === tx.targetId);
+                const targetName = target ? target.name.toLowerCase() : '';
+                const note = (tx.note || '').toLowerCase();
+                return targetName.includes(searchVal) || note.includes(searchVal);
+            });
+
+            document.getElementById('history-count-badge').textContent = `${filtered.length} Transaksi`;
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach(tx => {
+                const target = state.targets.find(t => t.id === tx.targetId);
+                const targetName = target ? target.name : '[Target Dihapus]';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition';
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-semibold text-slate-500 whitespace-nowrap">${formatDateID(tx.date)}</td>
+                    <td class="py-3 px-4 font-bold text-slate-900">${escapeHTML(targetName)}</td>
+                    <td class="py-3 px-4 font-black text-emerald-600 whitespace-nowrap">+ ${formatRupiah(tx.amount)}</td>
+                    <td class="py-3 px-4 text-slate-500 max-w-xs truncate">${escapeHTML(tx.note || '-')}</td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="confirmDeleteTransaction('${tx.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Hapus Transaksi">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            lucide.createIcons();
+        }
+
+        async function confirmDeleteTransaction(txId) {
+            const confirmed = await showConfirmModal("Hapus Transaksi", "Apakah Anda yakin ingin menghapus catatan setoran ini? Saldo target akan berkurang secara otomatis.");
+            if (confirmed) {
+                state.transactions = state.transactions.filter(tx => tx.id !== txId);
+                saveStateToStorage();
+                showToast("Transaksi berhasil dihapus");
+                renderHistoryTable();
+                renderDashboard();
+            }
+        }
+
+
+        // TARGET DETAIL MODAL
+        function openDetailModal(targetId) {
+            const target = state.targets.find(t => t.id === targetId);
+            if (!target) return;
+
+            const collected = getTargetCollectedAmount(targetId);
+            const remaining = Math.max(0, target.amount - collected);
+            const percent = Math.min(100, Math.round((collected / target.amount) * 100));
+            const isCompleted = collected >= target.amount;
+
+            document.getElementById('detail-title').textContent = target.name;
+            document.getElementById('detail-collected').textContent = formatRupiah(collected);
+            document.getElementById('detail-target-nominal').textContent = formatRupiah(target.amount);
+            document.getElementById('detail-progress-bar').style.width = `${percent}%`;
+            document.getElementById('detail-percentage').textContent = `${percent}% Tercapai`;
+            document.getElementById('detail-remaining').textContent = isCompleted ? 'Target Sudah Tercapai!' : `Sisa: ${formatRupiah(remaining)}`;
+
+            const iconObj = CATEGORY_ICONS.find(i => i.id === target.icon) || CATEGORY_ICONS[0];
+            document.getElementById('detail-icon-box').innerHTML = `<i data-lucide="${iconObj.icon}" class="w-6 h-6"></i>`;
+
+            const badgeEl = document.getElementById('detail-status-badge');
+            if (isCompleted) {
+                badgeEl.textContent = '🎉 Target Tercapai';
+                badgeEl.className = 'text-xs font-extrabold text-amber-400';
+            } else {
+                badgeEl.textContent = '⏱️ Sedang Berjalan';
+                badgeEl.className = 'text-xs font-semibold text-emerald-400';
+            }
+
+            // Target Notes
+            const notesBox = document.getElementById('detail-notes-container');
+            if (target.notes && target.notes.trim()) {
+                document.getElementById('detail-notes-text').textContent = target.notes;
+                notesBox.classList.remove('hidden');
+            } else {
+                notesBox.classList.add('hidden');
+            }
+
+            // Calculate average deposit & estimation logic
+            const targetTxs = state.transactions.filter(tx => tx.targetId === targetId);
+            if (targetTxs.length > 0) {
+                const totalTxSum = targetTxs.reduce((acc, curr) => acc + Number(curr.amount), 0);
+                const avgDeposit = Math.round(totalTxSum / targetTxs.length);
+                document.getElementById('detail-avg-deposit').textContent = `${formatRupiah(avgDeposit)} / setoran`;
+
+                if (isCompleted) {
+                    document.getElementById('detail-estimate').textContent = "Target Sudah Selesai 🎉";
+                } else {
+                    const depositsNeeded = Math.ceil(remaining / avgDeposit);
+                    document.getElementById('detail-estimate').textContent = `Sekitar ${depositsNeeded} setoran lagi`;
+                }
+            } else {
+                document.getElementById('detail-avg-deposit').textContent = 'Belum ada setoran';
+                document.getElementById('detail-estimate').textContent = 'Butuh minimal 1 setoran';
+            }
+
+            // Populate specific target history
+            const historyList = document.getElementById('detail-history-list');
+            historyList.innerHTML = '';
+
+            if (targetTxs.length === 0) {
+                historyList.innerHTML = '<li class="p-4 text-center text-slate-400 italic">Belum ada riwayat setoran untuk target ini.</li>';
+            } else {
+                targetTxs.forEach(tx => {
+                    const li = document.createElement('li');
+                    li.className = 'p-3 flex justify-between items-center hover:bg-slate-50 transition';
+                    li.innerHTML = `
+                        <div>
+                            <p class="font-bold text-slate-900">+ ${formatRupiah(tx.amount)}</p>
+                            <p class="text-[10px] text-slate-400">${formatDateID(tx.date)} ${tx.note ? '• ' + escapeHTML(tx.note) : ''}</p>
+                        </div>
+                        <button onclick="deleteSingleTxInDetail('${tx.id}', '${targetId}')" class="text-slate-400 hover:text-rose-600 p-1" title="Hapus">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    `;
+                    historyList.appendChild(li);
+                });
+            }
+
+            // Quick deposit action button inside detail modal
+            document.getElementById('detail-quick-add-btn').onclick = () => {
+                closeDetailModal();
+                quickDepositForTarget(targetId);
+            };
+
+            // Buttons
+            document.getElementById('detail-edit-target-btn').onclick = () => {
+                closeDetailModal();
+                openEditTargetModal(targetId);
+            };
+
+            document.getElementById('detail-delete-target-btn').onclick = async () => {
+                const confirmed = await showConfirmModal("Hapus Target", `Apakah Anda yakin ingin menghapus target "${target.name}"? Semua transaksi terkait juga akan dihapus.`);
+                if (confirmed) {
+                    deleteTarget(targetId);
+                    closeDetailModal();
+                }
+            };
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        async function deleteSingleTxInDetail(txId, targetId) {
+            const confirmed = await showConfirmModal("Hapus Setoran", "Apakah Anda yakin ingin menghapus setoran ini?");
+            if (confirmed) {
+                state.transactions = state.transactions.filter(tx => tx.id !== txId);
+                saveStateToStorage();
+                showToast("Setoran berhasil dihapus");
+                openDetailModal(targetId);
+                renderDashboard();
+            }
+        }
+
+        // CREATE / EDIT TARGET MODAL
+        function renderIconPicker() {
+            const container = document.getElementById('icon-picker-container');
+            container.innerHTML = '';
+
+            CATEGORY_ICONS.forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `p-2.5 rounded-xl border flex flex-col items-center justify-center transition ${selectedIcon === item.id ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-bold ring-2 ring-emerald-500/20' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`;
+                btn.innerHTML = `<i data-lucide="${item.icon}" class="w-5 h-5"></i>`;
+                btn.onclick = () => {
+                    selectedIcon = item.id;
+                    document.getElementById('target-icon').value = item.id;
+                    renderIconPicker();
+                };
+                container.appendChild(btn);
+            });
+
+            lucide.createIcons();
+        }
+
+        function openNewTargetModal() {
+            document.getElementById('target-modal-title').textContent = 'Buat Target Tabungan Baru';
+            document.getElementById('target-form-id').value = '';
+            document.getElementById('target-name').value = '';
+            document.getElementById('target-amount').value = '';
+            document.getElementById('target-date').value = '';
+            document.getElementById('target-notes').value = '';
+            selectedIcon = 'smartphone';
+            document.getElementById('target-icon').value = 'smartphone';
+            renderIconPicker();
+
+            document.getElementById('target-modal').classList.remove('hidden');
+        }
+
+        function openEditTargetModal(targetId) {
+            const target = state.targets.find(t => t.id === targetId);
+            if (!target) return;
+
+            document.getElementById('target-modal-title').textContent = 'Edit Target Tabungan';
+            document.getElementById('target-form-id').value = target.id;
+            document.getElementById('target-name').value = target.name;
+            document.getElementById('target-amount').value = target.amount;
+            document.getElementById('target-date').value = target.date || '';
+            document.getElementById('target-notes').value = target.notes || '';
+            selectedIcon = target.icon || 'smartphone';
+            document.getElementById('target-icon').value = selectedIcon;
+            renderIconPicker();
+
+            document.getElementById('target-modal').classList.remove('hidden');
+        }
+
+        function closeTargetModal() {
+            document.getElementById('target-modal').classList.add('hidden');
+        }
+
+        function handleTargetSubmit(e) {
+            e.preventDefault();
+
+            const formId = document.getElementById('target-form-id').value;
+            const name = document.getElementById('target-name').value.trim();
+            const amount = Number(document.getElementById('target-amount').value);
+            const date = document.getElementById('target-date').value;
+            const icon = document.getElementById('target-icon').value;
+            const notes = document.getElementById('target-notes').value.trim();
+
+            if (!name || !amount) {
+                showToast("Harap isi nama dan nominal target", "error");
+                return;
+            }
+
+            if (formId) {
+                // UPDATE
+                const index = state.targets.findIndex(t => t.id === formId);
+                if (index !== -1) {
+                    state.targets[index] = {
+                        ...state.targets[index],
+                        name,
+                        amount,
+                        date,
+                        icon,
+                        notes
+                    };
+                    showToast("Target berhasil diperbarui!");
+                }
+            } else {
+                // CREATE
+                const newTarget = {
+                    id: 'target-' + Date.now(),
+                    name,
+                    amount,
+                    date,
+                    icon,
+                    notes,
+                    createdAt: new Date().toISOString()
+                };
+                state.targets.unshift(newTarget);
+                showToast("Target baru berhasil dibuat!");
+            }
+
+            saveStateToStorage();
+            closeTargetModal();
+
+            if (currentActiveTab === 'dashboard') renderDashboard();
+            else if (currentActiveTab === 'targets') renderTargetsGrid();
+            else switchTab('dashboard');
+        }
+
+        function deleteTarget(targetId) {
+            state.targets = state.targets.filter(t => t.id !== targetId);
+            // Delete associated transactions
+            state.transactions = state.transactions.filter(tx => tx.targetId !== targetId);
+
+            saveStateToStorage();
+            showToast("Target dan riwayat terkait berhasil dihapus");
+
+            if (currentActiveTab === 'dashboard') renderDashboard();
+            else if (currentActiveTab === 'targets') renderTargetsGrid();
+            else switchTab('dashboard');
+        }
+
+
+        // CELEBRATION MODAL & CONFETTI
+        function triggerCelebration(target) {
+            document.getElementById('celebration-target-name').textContent = target.name;
+            document.getElementById('celebration-target-amount').textContent = formatRupiah(target.amount);
+            document.getElementById('celebration-modal').classList.remove('hidden');
+
+            // Fire confetti
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function closeCelebrationModal() {
+            document.getElementById('celebration-modal').classList.add('hidden');
+            switchTab('dashboard');
+        }
+
+        // CONFIRMATION MODAL HELPER
+        function showConfirmModal(title, message) {
+            return new Promise((resolve) => {
+                document.getElementById('confirm-modal-title').textContent = title;
+                document.getElementById('confirm-modal-message').textContent = message;
+                document.getElementById('confirm-modal').classList.remove('hidden');
+                confirmResolver = resolve;
+            });
+        }
+
+        function closeConfirmModal(result) {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            if (confirmResolver) {
+                confirmResolver(result);
+                confirmResolver = null;
+            }
+        }
+
+        // TOAST NOTIFICATION
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.textContent = message;
+            if (type === 'error') {
+                iconEl.className = 'text-rose-400';
+                iconEl.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i>`;
+            } else {
+                iconEl.className = 'text-emerald-400';
+                iconEl.innerHTML = `<i data-lucide="check-circle" class="w-5 h-5"></i>`;
+            }
+
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHTML(str) {
+            return String(str || '').replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+
+
+        // INIT APPLICATION
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStateFromStorage();
+            switchTab('dashboard');
+        });
+    </script>
+</body>
+</html>
